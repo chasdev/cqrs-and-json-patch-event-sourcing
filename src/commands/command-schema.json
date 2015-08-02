@@ -1,0 +1,48 @@
+{
+  "name": "command",
+  "title": "Command",
+  "description": "A 'Business' or 'Aggregate' Command used with the CQRS pattern ",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "A GUID used to identify the command",
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+    },
+    "name": {
+      "type": "string",
+      "default": "aggregate-modification"
+    },
+    "type": {
+      "description": "The type of command",
+      "type": "string",
+      "enum": [ "create", "patch", "delete", "logic", "orchestration" ]
+    },
+    "tenant": {
+      "type": "string"
+    },
+    "targetName": {
+      "description": "The name of the aggregate or process being affected",
+      "type": "string"
+    },
+    "targetId": {
+      "description": "A GUID identifying an affected aggregate root or process",
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+    },
+    "targetVersion": {
+      "description": "The target revision (serves as an optimistic lock token)",
+      "type": "string"
+    },
+    "body": {
+      "description": "The JSON Patch, JSON object, or JSON-based process spec.",
+      "type": "object"
+    },
+    "context": {
+      "description": "Additional context needed to process the command",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "required": [ "name", "type", "tenant", "targetName" ]
+}
