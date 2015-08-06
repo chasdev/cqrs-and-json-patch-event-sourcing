@@ -6,15 +6,15 @@ const
     transports: ['websocket'],
     'force new connection': true
   },
-  server    = require('../index'),
-  should    = require('should'),
   socketURL = 'http://127.0.0.1:3001',
   util      = require('util');
 
+require('../index');
+require('should');
+
 let client; // this is set within begin blocks
 
-describe("CQRS Command Server ",function() {
-
+describe('CQRS Command Server ',function() {
   it('Should accept a Command and publish corresponding event ', (done) => {
     let client = io.connect(socketURL, options);
 
@@ -46,7 +46,7 @@ describe("CQRS Command Server ",function() {
     });
 
     client.on('events', (expectedError) => {
-      expectedError.should.have.property('error');
+      expectedError.should.have.property('error', 'Missing required property: targetName');
       /* Disconnect so we don't interfere with the next test */
       client.disconnect();
       done();

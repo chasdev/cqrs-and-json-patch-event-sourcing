@@ -1,10 +1,10 @@
 'use strict';
 
-let
-  bunyan = require('bunyan');
+import bunyan from 'bunyan';
+import pkgJson from '../package';
 
-module.exports.log = bunyan.createLogger({
-  name: 'cqrs-and-json-patch-event-sourcing',
+export let log = bunyan.createLogger({
+  name: pkgJson.name,
   stream: process.stdout,
-  level: process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info'
+  level: process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'trace'
 });
