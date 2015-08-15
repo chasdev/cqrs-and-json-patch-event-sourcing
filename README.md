@@ -56,3 +56,8 @@ The web socket interface may be used to issue commands that comply with the `cqr
 
 (TODO: Complete!)
 #
+
+## Attribution
+
+* JSON Patch JSON Schema source:  https://github.com/fge/sample-json-schemas/blob/master/json-patch/json-patch.json
+

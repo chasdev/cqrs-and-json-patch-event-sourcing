@@ -14,32 +14,60 @@ let journal = _.wrapCallback((data, next) => {
   next(null, data);
 });
 
+/*
+ * Extracts the 'message' from a supplied validationError.
+ */
 function extractErrorMessage(validationError) {
   log.info('extractErrorMessage will return: ' + validationError.message);
   return validationError.message;
 }
 
-let validateCommand = _.wrapCallback((data, next) => {
+//TODO: Refactor - Invoking cb(err) from within setImmediate
+//      results in an 'uncaught exception'. Need to determine
+//      how to propagate errors from async functions.
+/*
+ * Validates the command against a JSON Schema.
+ */
+let validateCommand = _.wrapCallback(function(data, cb) {
   log.info('Will validate new command JSON: ' + util.inspect(data));
   let schema = require('./command-schema.json');
-  let isValid = tv4.validate(data, schema);
-  if (isValid) { next(null, data); }
-  else         { next(new Error(extractErrorMessage(tv4.error)), data); }
+  if (tv4.validate(data, schema)) {
+    return setImmediate(() => cb(null, data));
+  } else {
+    cb(new Error(extractErrorMessage(tv4.error)));
+  };
 });
 
-let validateAggregate = _.wrapCallback((data, next) => {
+let validateAggregateOrPatch = _.wrapCallback((data, cb) => {
   if (data.type === 'create') {
-    // TODO: Validate aggregate schema for 'create' commands
-    log.info('TODO: validate aggregate JSON: ' + util.inspect(data));
-    let isValid = true;
-    if (!isValid) { next(new Error('not implemented'), data); }
+    log.info('TODO: validate aggregate JSON: ' + util.inspect(data.body));
+    return setImmediate(() => { cb(null, data) });
+  } else {
+    // https://github.com/fge/sample-json-schemas/blob/master/json-patch/json-patch.json
+    log.info('XXXXXXXXXX validate patch: ' + util.inspect(data.body));
+    let schema = require('./json-patch.json');
+    if (tv4.validate(data.body, schema)) {
+      return setImmediate(() => cb(null, data));
+    } else {
+      cb(new Error(extractErrorMessage(tv4.error)));
+    };
   }
-  next(null, data);
 });
 
 function applyGuid(data) {
-  if (data.type === 'create' && !data.id) {
-    data.id = uuidGen.v4();
+  if (!data.id) data.id = uuidGen.v4();
+  return data;
+}
+
+function applyAggregateGuid(data) {
+  if (data.type !== 'create') return data;
+  if (!data.targetId) {
+    if (data.body && data.body.id) {
+      data.targetId = data.body.id;
+    } else {
+      data.targetId = uuidGen.v4();
+      data.body.id = data.targetId;
+    }
   }
   return data;
 }
@@ -56,9 +84,13 @@ let logAs = _.curry(function(label, data) {
   log.info(label + ': ' + util.inspect(data));
 });
 
-let handleCommands = function() {
+/*
+ * Validates the structure of a command, including an included
+ * JSON Patch or new aggregate instance against JSON Schema.
+ */
+function validate() {
   return _.pipeline(
-    _.tap(logAs('starting pipeline')),
+    _.tap(logAs('starting validateCommand pipeline')),
 
     _.filter(data => data.type !== undefined),
     _.tap(logAs('after dummy filter')),
@@ -66,11 +98,25 @@ let handleCommands = function() {
     _.flatMap(validateCommand),
     _.tap(logAs('after validateCommand')),
 
-    _.flatMap(validateAggregate),
+    _.flatMap(validateAggregateOrPatch),
     _.tap(logAs('after validateAggregate')),
 
     _.map(applyGuid),
     _.tap(logAs('after applyGuid')),
+
+    _.map(applyAggregateGuid),
+    _.tap(logAs('after applyAggregateGuid')),
+  );
+};
+
+/*
+ * Apply's an event by reconstituting an aggregate (if existing)
+ * applying the event, and exercising business rules and
+ * or extensions, and lastly journaling the event.
+ */
+function applyEvent() {
+  return _.pipeline(
+    _.tap(logAs('starting applyEvent pipeline')),
 
     _.map(toEvent),
     _.tap(logAs('after toEvent')),
@@ -87,7 +133,8 @@ exports.register = (server, options, next) => {
     log.info('New connection from ' + socket.handshake.address);
     socket.on('error', e => io.emit('events', { error: e.message }));
     _('commands', socket)
-      .pipe(handleCommands())
+      .pipe(validate())
+      .pipe(applyEvent())
       .errors((e, push) => {
         log.info('Error handler will push error to socket: ' + util.inspect(e));
         push(e);

@@ -15,7 +15,8 @@ require('should');
 let client; // this is set within begin blocks
 
 describe('CQRS Command Server ',function() {
-  it('Should accept a Command and publish corresponding event ', (done) => {
+
+  it('Should accept a \'create\' command and publish event ', (done) => {
     let client = io.connect(socketURL, options);
 
     client.on('connect', (data) => {
@@ -28,7 +29,30 @@ describe('CQRS Command Server ',function() {
 
     client.on('events', (createdEvent) => {
       createdEvent.should.have.property('id').with.lengthOf(36)
+      createdEvent.should.have.property('targetId').with.lengthOf(36)
       createdEvent.should.have.property('name', 'aggregate-modification-Executed')
+      /* Disconnect so we don't interfere with the next test */
+      client.disconnect();
+        done();
+    });
+  });
+
+  it('Should accept a \'patch\' command and publish event ', (done) => {
+    let client = io.connect(socketURL, options);
+
+    client.on('connect', (data) => {
+      client.emit('commands', { name: "aggregate-modification",
+                                type: "patch",
+                                targetName: "aggregate",
+                                tenant: "testTenant",
+                                body: [ { "op": "replace",
+                                          "path": "/text",
+                                          "value": "patched" } ] } );
+    });
+
+    client.on('events', (patchedEvent) => {
+      patchedEvent.should.have.property('id').with.lengthOf(36)
+      patchedEvent.should.have.property('name', 'aggregate-modification-Executed')
       /* Disconnect so we don't interfere with the next test */
       client.disconnect();
       done();

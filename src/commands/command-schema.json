@@ -36,7 +36,10 @@
     },
     "body": {
       "description": "The JSON Patch, JSON object, or JSON-based process spec.",
-      "type": "object"
+      "oneOf": [
+        { "type": "object" },
+        { "type": "array" }
+      ]
     },
     "context": {
       "description": "Additional context needed to process the command",
