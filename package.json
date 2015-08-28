@@ -4,9 +4,13 @@
   "description": "A generic CQRS endpoint using event sourcing for persistence.",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint src",
     "start": "node --harmony index",
-    "test": "./node_modules/.bin/grunt test"
+    "test": "./node_modules/.bin/grunt test",
+    "lint": "eslint src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:chasdev/cqrs-and-json-patch-event-sourcing.git"
   },
   "keywords": [
     "CQRS",
@@ -22,6 +26,7 @@
     "bunyan": "^1.4.0",
     "dotenv": "^1.2.0",
     "fast-json-patch": "^0.5.4",
+    "ges-client": "^0.9.1",
     "hapi": "^8.8.0",
     "highland": "^2.5.1",
     "node-uuid": "^1.4.3",

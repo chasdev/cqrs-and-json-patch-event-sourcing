@@ -23,7 +23,7 @@
     "browser": false,     // browser global variables.
     "node": true ,        // Node.js global variables and Node.js-specific rules.
     "amd": false,         // defines require() and define() as global variables as per the amd spec.
-    "mocha": true,       // adds all of the mocha testing global variables.
+    "mocha": true,        // adds all of the mocha testing global variables.
     "jasmine": false,     // adds all of the Jasmine testing global variables for version 1.3 and 2.0.
     "phantomjs": false,   // phantomjs global variables.
     "jquery": false,      // jquery global variables.
@@ -54,8 +54,8 @@
     "no-empty-class": 0,          // disallow the use of empty character classes in regular expressions
     "no-ex-assign": 0,            // disallow assigning to the exception in a catch block
     "no-extra-boolean-cast": 0,   // disallow double-negation boolean casts in a boolean context
-    "no-extra-parens": 0,         // disallow unnecessary parentheses (off by default)
-    "no-extra-semi": 0,           // disallow unnecessary semicolons
+    "no-extra-parens": 1,         // disallow unnecessary parentheses (off by default)
+    "no-extra-semi": 1,           // disallow unnecessary semicolons
     "no-func-assign": 0,          // disallow overwriting functions written as function declarations
     "no-inner-declarations": 0,   // disallow function or variable declarations in nested blocks
     "no-invalid-regexp": 0,       // disallow invalid regular expression strings in the RegExp constructor
@@ -77,23 +77,23 @@
     "complexity": 0,            // specify the maximum cyclomatic complexity allowed in a program (off by default)
     "consistent-return": 0,     // require return statements to either always or never specify values
     "curly": 0,                 // specify curly brace conventions for all control statements
-    "default-case": 0,          // require default case in switch statements (off by default)
+    "default-case": 1,          // require default case in switch statements (off by default)
     "dot-notation": 0,          // encourages use of dot notation whenever possible
-    "eqeqeq": 0,                // require the use of === and !==
+    "eqeqeq": 1,                // require the use of === and !==
     "guard-for-in": 0,          // make sure for-in loops have an if statement (off by default)
     "no-alert": 0,              // disallow the use of alert, confirm, and prompt
-    "no-caller": 0,             // disallow use of arguments.caller or arguments.callee
+    "no-caller": 2,             // disallow use of arguments.caller or arguments.callee
     "no-div-regex": 0,          // disallow division operators explicitly at beginning of regular expression (off by default)
     "no-else-return": 0,        // disallow else after a return in an if (off by default)
     "no-empty-label": 0,        // disallow use of labels for anything other then loops and switches
     "no-eq-null": 0,            // disallow comparisons to null without a type-checking operator (off by default)
-    "no-eval": 0,               // disallow use of eval()
-    "no-extend-native": 0,      // disallow adding to native types
+    "no-eval": 2,               // disallow use of eval()
+    "no-extend-native": 2,      // disallow adding to native types
     "no-extra-bind": 0,         // disallow unnecessary function binding
-    "no-fallthrough": 0,        // disallow fallthrough of case statements
+    "no-fallthrough": 1,        // disallow fallthrough of case statements
     "no-floating-decimal": 0,   // disallow the use of leading or trailing decimal points in numeric literals (off by default)
     "no-implied-eval": 0,       // disallow use of eval()-like methods
-    "no-iterator": 0,           // disallow usage of __iterator__ property
+    "no-iterator": 1,           // disallow usage of __iterator__ property
     "no-labels": 0,             // disallow use of labeled statements
     "no-lone-blocks": 0,        // disallow unnecessary nested blocks
     "no-loop-func": 0,          // disallow creation of functions within loops
@@ -157,7 +157,7 @@
     ////////// Stylistic Issues //////////
 
     "brace-style": 0,               // enforce one true brace style (off by default)
-    "camelcase": 0,                 // require camel case names
+    "camelcase": 1,                 // require camel case names
     "comma-spacing": 0,             // enforce spacing before and after comma
     "comma-style": 0,               // enforce one true comma style (off by default)
     "consistent-this": 0,           // enforces consistent naming when capturing the current execution context (off by default)
@@ -166,7 +166,7 @@
     "func-style": 0,                // enforces use of function declarations or expressions (off by default)
     "key-spacing": 0,               // enforces spacing between keys and values in object literal properties
     "max-nested-callbacks": 0,      // specify the maximum depth callbacks can be nested (off by default)
-    "new-cap": 0,                   // require a capital letter for constructors
+    "new-cap": 2,                   // require a capital letter for constructors
     "new-parens": 0,                // disallow the omission of parentheses when invoking a constructor with no arguments
     "no-array-constructor": 0,      // disallow use of the Array constructor
     "no-inline-comments": 0,        // disallow comments inline after code (off by default)
@@ -174,18 +174,18 @@
     "no-mixed-spaces-and-tabs": 0,  // disallow mixed spaces and tabs for indentation
     "no-multiple-empty-lines": 0,   // disallow multiple empty lines (off by default)
     "no-nested-ternary": 0,         // disallow nested ternary expressions (off by default)
-    "no-new-object": 0,             // disallow use of the Object constructor
+    "no-new-object": 1,             // disallow use of the Object constructor
     "no-space-before-semi": 0,      // disallow space before semicolon
     "no-spaced-func": 0,            // disallow space between function identifier and application
     "no-ternary": 0,                // disallow the use of ternary operators (off by default)
-    "no-trailing-spaces": 0,        // disallow trailing whitespace at the end of lines
+    "no-trailing-spaces": 1,        // disallow trailing whitespace at the end of lines
     "no-underscore-dangle": 0,      // disallow dangling underscores in identifiers
     "no-wrap-func": 0,              // disallow wrapping of non-IIFE statements in parens
     "one-var": 0,                   // allow just one var statement per function (off by default)
     "operator-assignment": 0,       // require assignment operator shorthand where possible or prohibit it entirely (off by default)
     "padded-blocks": 0,             // enforce padding within blocks (off by default)
     "quote-props": 0,               // require quotes around object literal property names (off by default)
-    "quotes": [2, "single"],        // specify whether double or single quotes should be used
+    "quotes": [1, "single"],        // specify whether double or single quotes should be used
     "semi": 0,                      // require or disallow use of semicolons instead of ASI
     "sort-vars": 0,                 // sort variables within the same declaration block (off by default)
     "space-after-function-name": 0, // require a space after function names (off by default)

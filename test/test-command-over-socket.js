@@ -1,4 +1,4 @@
-'use strict';
+ 'use strict';
 
 const
   io = require('socket.io-client'),
@@ -14,6 +14,8 @@ require('should');
 
 let client; // this is set within begin blocks
 
+/* eslint-disable quotes */
+
 describe('CQRS Command Server ',function() {
 
   it('Should accept a \'create\' command and publish event ', (done) => {
@@ -22,8 +24,11 @@ describe('CQRS Command Server ',function() {
     client.on('connect', (data) => {
       client.emit('commands', { name: "aggregate-modification",
                                 type: "create",
-                                targetName: "aggregate",
+                                targetName: "foos",
                                 tenant: "testTenant",
+                                // TODO: Read from stream to determine version
+                                //       and require it to be provided.
+                                // version: 13,
                                 body: { text: "new test Item"} } );
     });
 
@@ -43,7 +48,8 @@ describe('CQRS Command Server ',function() {
     client.on('connect', (data) => {
       client.emit('commands', { name: "aggregate-modification",
                                 type: "patch",
-                                targetName: "aggregate",
+                                targetName: "foos",
+                                targetId: "00000000-e95e-4dc9-8e78-5db108a26637",
                                 tenant: "testTenant",
                                 body: [ { "op": "replace",
                                           "path": "/text",

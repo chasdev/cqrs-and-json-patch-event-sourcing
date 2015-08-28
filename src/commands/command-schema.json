@@ -30,9 +30,9 @@
       "type": "string",
       "pattern": "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
     },
-    "targetVersion": {
-      "description": "The target revision (serves as an optimistic lock token)",
-      "type": "string"
+    "version": {
+      "description": "The target revision (location in journal)",
+      "type": "number"
     },
     "body": {
       "description": "The JSON Patch, JSON object, or JSON-based process spec.",
