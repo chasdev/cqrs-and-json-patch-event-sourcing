@@ -20,13 +20,21 @@ CQRS may also leverage various projections employed to optimize various types of
 
 ## Running the service
 
-Install dependencies normally:
+1 - Install dependencies normally:
 
 ```
 $ npm install
 ```
 
-and then either run the service:
+2 - Ensure the environment variables identified below are set. This can be achieved by including a ``.env`` file (not checked into git) containing the following:
+
+```
+# Host/port of EventStore - download from https://geteventstore.com
+EVENT_STORE_HOST={the_host}
+EVENT_STORE_PORT={the_port}
+```
+
+3 - Run the service:
 
 ```
 $ npm start

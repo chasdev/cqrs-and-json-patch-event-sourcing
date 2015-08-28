@@ -1,4 +1,4 @@
-'use strict';
+ 'use strict';
 
 const
   io = require('socket.io-client'),
@@ -22,7 +22,7 @@ describe('CQRS Command Server ',function() {
     client.on('connect', (data) => {
       client.emit('commands', { name: "aggregate-modification",
                                 type: "create",
-                                targetName: "aggregate",
+                                targetName: "foos",
                                 tenant: "testTenant",
                                 body: { text: "new test Item"} } );
     });
@@ -43,7 +43,8 @@ describe('CQRS Command Server ',function() {
     client.on('connect', (data) => {
       client.emit('commands', { name: "aggregate-modification",
                                 type: "patch",
-                                targetName: "aggregate",
+                                targetName: "foos",
+                                targetId: "11369c1-1111-1118-8e9c-3dc8e58a6a0f",
                                 tenant: "testTenant",
                                 body: [ { "op": "replace",
                                           "path": "/text",
