@@ -4,52 +4,54 @@ import _ from 'highland';
 import { appendEvent } from '../event-store';
 import { log } from '../logger';
 import socket from 'socket.io';
-import tv4 from 'tv4';
 import util from 'util';
 import uuidGen from 'node-uuid';
+import { validateJSON } from '../validator';
 
+let io; // socket
 
-//TODO: Refactor - Invoking cb(err) or throwing an Error from within
-//      setImmediate results in an 'uncaught exception'. Need to determine
-//      how to propagate errors from async functions.
-/*
- * Validates the command against a JSON Schema.
- */
 let validateCommand = _.wrapCallback((data, cb) => {
-  log.info('Will validate new command JSON: ' + util.inspect(data));
-  let schema = require('./command-schema.json');
-  if (tv4.validate(data, schema)) {
-    return setImmediate(() => cb(null, data));
-  } else {
-    throw new Error(extractErrorMessage(tv4.error));
-  }
+  (async function() {
+    try {
+      let schema = require('./command-schema.json');
+      let result = await validateJSON(schema, data);
+      log.info(' ' + util.inspect(result));
+      return cb(null, result);
+    } catch (e) {
+      log.error('validateCommand failed with: ' + e.message);
+      return cb(e);
+    }
+  })();
 });
 
 let validateAggregateOrPatch = _.wrapCallback((data, cb) => {
-  if (data.type === 'create') {
-    log.info('TODO: validate aggregate JSON: ' + util.inspect(data.body));
-    return setImmediate(() => { cb(null, data) });
-  } else {
-    // https://github.com/fge/sample-json-schemas/blob/master/json-patch/json-patch.json
-    log.info('validate patch: ' + util.inspect(data.body));
-    let schema = require('./json-patch.json');
-    if (tv4.validate(data.body, schema)) {
-      return setImmediate(() => cb(null, data));
-    } else {
-      throw new Error(extractErrorMessage(tv4.error));
+  (async function() {
+    try {
+      if (data.type === 'create') {
+        //TODO: Retrieve aggregate schema to allow validation
+        log.warn('validation of aggregate JSON not implemented!');
+        return setImmediate(() => { cb(null, data) });
+      } else {
+        let schema = require('./json-patch.json');
+        let result = await validateJSON(schema, data.body);
+        return cb(null, data);
+      }
+    } catch (e) {
+      log.error('validateAggregateOrPatch failed with: ' + e.message);
+      return cb(e);
     }
-  }
+  })();
 });
 
 let journal = _.wrapCallback((data, cb) => {
   (async function() {
     try {
-       log.info('journal is going to appendEvent...')
+       log.info('journal() is going to appendEvent...')
        let result = await appendEvent(data);
-       log.info('journal appended event')
+       log.info('journal() appended event')
        cb(null, result);
     } catch (e) {
-      log.error('journal caught: ' + e.message);
+      log.error('journal() caught: ' + e.message);
       cb(e);
     }
   })();
@@ -61,16 +63,20 @@ let logAs = _.curry(function(label, data) {
 
 exports.register = (server, options, next) => {
 
-  let io = socket(server.select('commands').listener);
+  io = socket(server.select('commands').listener);
+
   io.on('connection', (socket) => {
     log.info('New connection from ' + socket.handshake.address);
+
     socket.on('error', e => io.emit('events', { error: e.message }));
+
     _('commands', socket)
-      .pipe(validate())
-      .pipe(applyEvent())
+      .pipe(commandValidationPipeline())
+      .pipe(commandProcessingPipeline())
+      .pipe(eventJournalingPipeline())
       .errors((e, push) => {
-        log.info('Error handler will push error to socket: ' + util.inspect(e));
-        push(e);
+        log.error('Error encountered in stream: ' + util.inspect(e));
+        push(e); // TODO: cleanse error before pushing
       })
       .each(data => {
         log.info('Going to emit ' + util.inspect(data));
@@ -88,18 +94,20 @@ exports.register.attributes = {
  * Validates the structure of a command, including an included
  * JSON Patch or new aggregate instance against JSON Schema.
  */
-function validate() {
+function commandValidationPipeline() {
   return _.pipeline(
-    _.tap(logAs('starting validateCommand pipeline')),
+    _.tap(logAs('starting command validation pipeline')),
 
     _.filter(data => data.type !== undefined),
-    _.tap(logAs('after dummy filter')),
+    _.tap(logAs('after data.type filter')),
 
     _.flatMap(validateCommand),
     _.tap(logAs('after validateCommand')),
+    _.errors((e, push) => { reportError(e) }),
 
     _.flatMap(validateAggregateOrPatch),
-    _.tap(logAs('after validateAggregate')),
+    _.tap(logAs('after validateAggregateOrPatch')),
+    _.errors((e, push) => { reportError(e) }),
 
     _.map(applyGuid),
     _.tap(logAs('after applyGuid')),
@@ -110,13 +118,26 @@ function validate() {
 }
 
 /*
- * Apply's an event by reconstituting an aggregate (if existing)
- * applying the event, and exercising business rules and
- * or extensions, and lastly journaling the event.
+ * Processes a command by reconstituting an aggregate (if existing)
+ * and exercising associated business rules and extensions.
  */
-function applyEvent() {
+function commandProcessingPipeline() {
   return _.pipeline(
-    _.tap(logAs('starting applyEvent pipeline')),
+    _.tap(logAs('starting command processing pipeline')),
+
+    // _.map(executeCommandOnAggregate),
+    _.tap(logAs('after executeCommandOnAggregate')),
+    _.errors((e, push) => { reportError(e) }),
+  );
+}
+
+/*
+ * Converts a command into an event, and writes that event
+ * into the event journal.
+ */
+function eventJournalingPipeline() {
+  return _.pipeline(
+    _.tap(logAs('starting event journaling pipeline')),
 
     _.map(toEvent),
     _.tap(logAs('after toEvent')),
@@ -126,12 +147,8 @@ function applyEvent() {
   );
 }
 
-/*
- * Extracts the 'message' from a supplied validationError.
- */
-function extractErrorMessage(validationError) {
-  log.info('extractErrorMessage will return: ' + validationError.message);
-  return validationError.message;
+function reportError(e) {
+  io.emit('events', {'error': e.message });
 }
 
 function applyGuid(data) {

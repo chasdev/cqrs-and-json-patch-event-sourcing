@@ -35,8 +35,6 @@ function es(event) {
                                ? event.version
                                : ges.expectedVersion.any;
     connection.appendToStream(event.targetName, appendData, (err, result) => {
-      log.info('XXXXXX callback err = ' + util.inspect(err));
-      log.info('XXXXXX callback evt = ' + util.inspect(result));
       if (err) reject(err);
       event.version = result.NextExpectedVersion;
       resolve(event);
