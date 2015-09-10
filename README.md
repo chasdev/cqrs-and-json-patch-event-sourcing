@@ -1,32 +1,21 @@
-# CQRS and JSON Patch Event Sourcing
+# CQRS and JSON Patch Event Sourcing (experimentation only)
 
-Status: VERY incomplete. My primary goal is experimentation with Highland.js and ES2015/ES2016 features.
-
-This README contains forward looking statements -- there is not much implemented here yet.
-See 'Current Status' section at bottom of this README.
+Status: VERY INCOMPLETE and MAY NOT BE COMPLETED.
+My primary goal was to play a little with Highland.js and ES2015/ES2016 features, and I may not have much if any time to work on this.
 
 ## TL;DR
 
-This project uses the Command Query Responsibility Segregation (CQRS) pattern to accept commands over a web socket. These commands are handled, and are subsequently converted into events and written to an event store (using the 'Event Sourcing' (ES) architectural pattern).
+Accepts a command over a web socket, converts it into an event, and writes it to an event store.
 
-While most CQRS and ES implementations employ explicit Aggregate objects to hold state, execute commands and emit events, this implementation applies various functions (transforms) to the commands and events within a pipeline.  That is,
+Instead of using an Aggregate object to hold state, execute commands, and emit events, various functions (transforms) are used to interact with the commands and events carried as json in highland.js streams. TODO: Currently, while events are created and journaled into an event store, the affected aggregate is not reconstituted nor are business rules exercised to 'apply' the event. This is obviously a huge functional gap with respect to CQRS and ES, so this project is not (yet?) very useful.
 
-* aggregate state is held as either a JSON document representing the initial state of an aggregate or as a JSON Patch representing a change to an existing aggregate. These JSON documents are carried within the commands and events progressing through a pipeline.
-* aggregate business logic (for handling commands) is provided by externalized business rules and extensions which are applied to the commands in the pipeline.
+It is considered best practice when using CQRS and ES to create specific domain (business) commands and events. While 'business events' (and commands) are indeed very important, simple 'edits' may imho not warrant modeling as an explicit business event. Consequently, a generic command/event will be able to create an aggregate, patch an existing aggregate, or indicate an aggregate should be (considered to be) deleted. Specifically, a generic command/event will either contain a JSON document representing the aggregate's initial state or a JSON Patch affecting existing state.
 
-It is a best practice when using CQRS and ES to create specific domain (business) commands and events. However, this implementation also allows use of a generic command/event for changing the state of an aggregate. That is, while 'business events' (and commands) are important, simple 'edits' may not warrant modeling as an explicit business event.
+Commands are validated using a [JSON Schema](https://github.com/chasdev/cqrs-and-json-patch-event-sourcing/blob/evt-store/src/commands/command-schema.json).
 
-Consequently, a generic command/event may be used to create an aggregate, to patch an existing aggregate, or to indicate the aggregate should be considered to be deleted. Specifically, the generic command/event will either contain an aggregate's initial state (as a JSON document) or a JSON Patch (affecting an existing aggregate).
+The open source [Event Store](https://geteventstore.com) is used to journal events.  An easy way to run Event Store is via the [wkruse/eventstore-docker](git@github.com:wkruse/eventstore-docker.git) Docker container. To run the tests without having an Event Store, you may set '``NODE_ENV=test``' (which will use a simple mock).
 
-This service validates commands against a [JSON Schema](https://github.com/chasdev/cqrs-and-json-patch-event-sourcing/blob/evt-store/src/commands/command-schema.json). (See attribution at end of README.)
-
-This service currently uses the open source [Event Store](https://geteventstore.com) to journal events.  An easy way to run Event Store is via the [wkruse/eventstore-docker](git@github.com:wkruse/eventstore-docker.git) Docker container. To run the tests without having an Event Store, you may set '``NODE_ENV=test``' (which will use a simple mock).
-
-_(planned:)_ In addition to the web socket interface, this service exposes a typical resource-oriented HTTP/S API supporting CRUD of resources. POST, PATCH, PUT, and DELETE requests are converted into appropriate 'aggregate-modification' commands that result in events that are written to the event journal. As such, the HTTP/S API is a front-end to the CQRS/ES implementation supporting modification of aggregates. GET requests are supported by accessing the 'read' database.
-
-_(planned:)_ This endpoint is generic and must be injected with JSON Schemas (if validation of payloads is enabled), custom command handlers (to support custom business commands beyond 'create', 'patch', and 'delete' commands), business rules (that are invoked when processing a command and that are specified using the [nools]() DSL), and state machines (that may be used to support long-running processes). Without injecting these custom artifacts, this service supports basic CRUD of aggregates using JSON without validation. These custom artifacts are retrieved from GitHub based on configuration specified in environment variables, however the retrieval of these artifacts may be performed at build time and 'baked' into a Docker container to support production deployments using immutable containers.
-
-_(planned:)_ To support the 'query' side of CQRS, a '[MemoryImage](http://martinfowler.com/bliki/MemoryImage.html)' will be used. This will still require interaction with the Event Store to ensure the 'version' of an aggregate contained within the memory image reflects the last journaled event for that aggregate. (The memory image may be a very simple weakmap.) In addition, or as an alternative, various projections supported by the Event Store may be employed when handling queries.
+There is very little functionality implemented thus far. For example, aggregates are not reconstituted, business logic is not exercised, etc...
 
 ----
 
@@ -69,19 +58,9 @@ $ LOG_LEVEL=trace npm start
 $ LOG_LEVEL=fatal npm test
 ```
 
-_(planned: This will likely be dockerized as well.)_
-
-## API
-
-_This section has not yet been written._
-
-## Design Overview
-
-_This section has not yet been written._
-
 ## Attribution
 
-* JSON Patch JSON Schema source:  https://github.com/fge/sample-json-schemas/blob/master/json-patch/json-patch.json
+* JSON Patch JSON Schema was copied from:  https://github.com/fge/sample-json-schemas/blob/master/json-patch/json-patch.json
 
 ## Current Status
 
